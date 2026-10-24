@@ -1,0 +1,6 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "apps/api/dist",
+  "installCommand": "npm install",
+  "framework": "express"
+}

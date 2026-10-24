@@ -1,0 +1,130 @@
+.auth-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: #e8edf7;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(40, 119, 237, 0.2), transparent 55%),
+    #080d18;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.auth-card {
+  width: min(100%, 430px);
+  display: flex;
+  flex-direction: column;
+  padding: 34px;
+  border: 1px solid #26354c;
+  border-radius: 16px;
+  background: #0d1523;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.auth-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 22px;
+  border: 1px solid #315d99;
+  border-radius: 13px;
+  color: #81b2ff;
+  background: #142b4d;
+}
+
+.auth-eyebrow {
+  margin: 0 0 8px;
+  color: #81b2ff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+
+.auth-card h1 {
+  margin: 0;
+  color: #f4f7fd;
+  font-size: 30px;
+}
+
+.auth-description,
+.auth-footnote,
+.auth-status {
+  color: #aab7ca;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.auth-description {
+  margin: 10px 0 24px;
+}
+
+.auth-card label {
+  margin: 0 0 8px;
+  color: #d7e0ee;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.auth-card input {
+  width: 100%;
+  min-height: 48px;
+  margin-bottom: 20px;
+  padding: 10px 13px;
+  border: 1px solid #35465f;
+  border-radius: 8px;
+  outline: none;
+  color: #f4f7fd;
+  background: #080f1c;
+  font: inherit;
+  font-size: 16px;
+}
+
+.auth-card input:focus {
+  border-color: #5596ff;
+  box-shadow: 0 0 0 3px rgba(78, 148, 255, 0.2);
+}
+
+.auth-submit {
+  min-height: 48px;
+  margin-top: 4px;
+  border: 1px solid #4388f4;
+  border-radius: 8px;
+  color: #fff;
+  background: #2877ed;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.auth-error {
+  margin: 0 0 20px;
+  padding: 12px;
+  border: 1px solid #753c47;
+  border-radius: 8px;
+  color: #ffb9c0;
+  background: #321b25;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.auth-footnote {
+  margin: 17px 0 0;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .auth-screen {
+    padding: 16px;
+  }
+
+  .auth-card {
+    padding: 26px 22px;
+  }
+}

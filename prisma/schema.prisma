@@ -1,0 +1,346 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum StaffRole {
+  ADMIN
+  CASHIER
+}
+
+enum ConsoleType {
+  PS3
+  PS4
+}
+
+enum StationDeviceType {
+  CONSOLE
+  PS_BOX
+}
+
+enum BillingMode {
+  HOURLY
+  PACKAGE
+}
+
+enum RewardLedgerEntryType {
+  PAID_MINUTES_EARNED
+  FREE_MINUTES_EARNED
+  REWARD_REDEEMED
+  CORRECTION
+  REVERSAL
+}
+
+enum VoucherStatus {
+  ISSUED
+  REDEEMED
+  EXPIRED
+  VOID
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CHECKED_IN
+  CANCELLED
+  NO_SHOW
+}
+
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  VOID
+}
+
+enum PaymentMethod {
+  CASH
+  QRIS_MANUAL
+}
+
+enum PaymentStatus {
+  CONFIRMED
+  REFUNDED
+  VOID
+}
+
+model StaffUser {
+  id           String      @id @default(uuid()) @db.Uuid
+  name         String
+  email        String      @unique
+  passwordHash String
+  role         StaffRole   @default(CASHIER)
+  active       Boolean     @default(true)
+  bookings     Booking[]
+  sessions     RentalSession[] @relation("SessionCreator")
+  stopped      RentalSession[] @relation("SessionStopper")
+  payments     Payment[]
+  expenses     Expense[]
+  auditLogs    AuditLog[]
+  rewardLedger RewardLedger[]
+  issuedVouchers Voucher[] @relation("VoucherIssuer")
+  authSessions AuthSession[]
+  createdAt    DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime    @updatedAt @db.Timestamptz(3)
+}
+
+model AuthSession {
+  id          String    @id @default(uuid()) @db.Uuid
+  staffUserId String    @db.Uuid
+  tokenHash   String    @unique
+  expiresAt   DateTime  @db.Timestamptz(3)
+  revokedAt   DateTime? @db.Timestamptz(3)
+  userAgent   String?
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  staffUser   StaffUser @relation(fields: [staffUserId], references: [id], onDelete: Restrict)
+  @@index([staffUserId, expiresAt])
+}
+
+model Station {
+  id                String            @id @default(uuid()) @db.Uuid
+  code              String            @unique
+  displayName       String?
+  consoleType       ConsoleType
+  deviceType        StationDeviceType @default(CONSOLE)
+  setupConfirmed    Boolean           @default(false)
+  active            Boolean           @default(true)
+  maintenanceReason String?
+  bookings          Booking[]
+  sessions          RentalSession[]
+  createdAt         DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime          @updatedAt @db.Timestamptz(3)
+}
+
+model Rate {
+  id              String      @id @default(uuid()) @db.Uuid
+  key             String
+  version         Int
+  name            String
+  consoleType     ConsoleType?
+  deviceType      StationDeviceType @default(CONSOLE)
+  billingMode     BillingMode
+  amount          Int
+  durationMinutes Int?
+  minimumMinutes  Int
+  roundingMinutes Int
+  effectiveFrom   DateTime    @db.Timestamptz(3)
+  effectiveTo     DateTime?   @db.Timestamptz(3)
+  active          Boolean     @default(true)
+  bookings        Booking[]
+  sessions        RentalSession[]
+  createdAt       DateTime    @default(now()) @db.Timestamptz(3)
+  @@unique([key, version])
+  @@index([key, effectiveFrom, effectiveTo])
+}
+
+model Customer {
+  id           String      @id @default(uuid()) @db.Uuid
+  name         String
+  phone        String?
+  notes        String?
+  memberNumber String?     @unique
+  memberStatus Boolean     @default(false)
+  bookings     Booking[]
+  sessions     RentalSession[]
+  invoices     Invoice[]
+  rewardLedger RewardLedger[]
+  vouchers     Voucher[]
+  createdAt    DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime    @updatedAt @db.Timestamptz(3)
+  @@index([name])
+  @@index([phone])
+}
+
+model Booking {
+  id           String        @id @default(uuid()) @db.Uuid
+  number       String        @unique
+  stationId    String        @db.Uuid
+  customerId   String?       @db.Uuid
+  rateId       String        @db.Uuid
+  rateSnapshot Json
+  startsAt     DateTime      @db.Timestamptz(3)
+  endsAt       DateTime      @db.Timestamptz(3)
+  status       BookingStatus @default(CONFIRMED)
+  cancelReason String?
+  createdById  String        @db.Uuid
+  station      Station       @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  customer     Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  rate         Rate          @relation(fields: [rateId], references: [id], onDelete: Restrict)
+  createdBy    StaffUser     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  session      RentalSession?
+  createdAt    DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime      @updatedAt @db.Timestamptz(3)
+  @@index([stationId, startsAt, endsAt, status])
+}
+
+model RentalSession {
+  id                String             @id @default(uuid()) @db.Uuid
+  number            String             @unique
+  stationId         String             @db.Uuid
+  bookingId         String?            @unique @db.Uuid
+  customerId        String?            @db.Uuid
+  rateId            String?            @db.Uuid
+  rateSnapshot      Json
+  startedAt         DateTime           @db.Timestamptz(3)
+  plannedEndAt      DateTime?          @db.Timestamptz(3)
+  endedAt           DateTime?          @db.Timestamptz(3)
+  status            SessionStatus      @default(ACTIVE)
+  billedDurationMinutes Int?
+  totalAmount       Int?
+  createdById       String             @db.Uuid
+  stoppedById       String?            @db.Uuid
+  station           Station            @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  booking           Booking?           @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  customer          Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  rate              Rate?              @relation(fields: [rateId], references: [id], onDelete: Restrict)
+  createdBy         StaffUser          @relation("SessionCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  stoppedBy         StaffUser?         @relation("SessionStopper", fields: [stoppedById], references: [id], onDelete: Restrict)
+  adjustments       SessionAdjustment[]
+  invoice           Invoice?
+  rewardLedger      RewardLedger[]
+  redeemedVouchers  Voucher[]          @relation("VoucherRedemption")
+  createdAt         DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime           @updatedAt @db.Timestamptz(3)
+  @@index([stationId, status])
+  @@index([startedAt])
+}
+
+model SessionAdjustment {
+  id          String   @id @default(uuid()) @db.Uuid
+  sessionId   String   @db.Uuid
+  type        String
+  minutes     Int?
+  amountDelta Int
+  reason      String
+  rateSnapshot Json?
+  createdById String   @db.Uuid
+  session     RentalSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  @@index([sessionId, createdAt])
+}
+
+model Invoice {
+  id              String        @id @default(uuid()) @db.Uuid
+  number          String        @unique
+  sessionId       String        @unique @db.Uuid
+  customerId      String?       @db.Uuid
+  subtotal        Int
+  discount        Int           @default(0)
+  total           Int
+  status          InvoiceStatus @default(UNPAID)
+  pricingSnapshot Json
+  issuedAt        DateTime      @default(now()) @db.Timestamptz(3)
+  session         RentalSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  customer        Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  payments        Payment[]
+  rewardLedger    RewardLedger[]
+  createdAt       DateTime      @default(now()) @db.Timestamptz(3)
+  @@index([issuedAt, status])
+}
+
+model Payment {
+  id             String        @id @default(uuid()) @db.Uuid
+  invoiceId      String        @db.Uuid
+  idempotencyKey String        @unique
+  amount         Int
+  method         PaymentMethod
+  status         PaymentStatus @default(CONFIRMED)
+  reference      String?
+  recordedById   String        @db.Uuid
+  recordedAt     DateTime      @default(now()) @db.Timestamptz(3)
+  invoice        Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  recordedBy     StaffUser     @relation(fields: [recordedById], references: [id], onDelete: Restrict)
+  adjustments    PaymentAdjustment[]
+  @@index([recordedAt, method, status])
+}
+
+model PaymentAdjustment {
+  id           String   @id @default(uuid()) @db.Uuid
+  paymentId    String   @db.Uuid
+  amount       Int
+  type         String
+  reason       String
+  approvedById String   @db.Uuid
+  payment      Payment  @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model Expense {
+  id           String   @id @default(uuid()) @db.Uuid
+  category     String
+  description  String
+  amount       Int
+  occurredAt   DateTime @db.Timestamptz(3)
+  recordedById String   @db.Uuid
+  voidedAt     DateTime? @db.Timestamptz(3)
+  voidReason   String?
+  recordedBy   StaffUser @relation(fields: [recordedById], references: [id], onDelete: Restrict)
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  @@index([occurredAt, voidedAt])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @db.Uuid
+  action     String
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  requestId  String?
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  actor      StaffUser? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+model RewardLedger {
+  id               String                 @id @default(uuid()) @db.Uuid
+  customerId       String                 @db.Uuid
+  entryType        RewardLedgerEntryType
+  paidMinutes      Int                    @default(0)
+  rewardMinutes    Int                    @default(0)
+  idempotencyKey   String                 @unique
+  reason           String?
+  sourceSessionId  String?                @db.Uuid
+  sourceInvoiceId  String?                @db.Uuid
+  recordedById     String?                @db.Uuid
+  customer         Customer               @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  sourceSession    RentalSession?         @relation(fields: [sourceSessionId], references: [id], onDelete: Restrict)
+  sourceInvoice    Invoice?               @relation(fields: [sourceInvoiceId], references: [id], onDelete: Restrict)
+  recordedBy       StaffUser?             @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+  createdAt        DateTime               @default(now()) @db.Timestamptz(3)
+  @@index([customerId, createdAt])
+  @@index([sourceSessionId])
+  @@index([sourceInvoiceId])
+}
+
+model Voucher {
+  id                   String        @id @default(uuid()) @db.Uuid
+  code                 String        @unique
+  durationMinutes      Int           @default(60)
+  status               VoucherStatus @default(ISSUED)
+  customerId           String?       @db.Uuid
+  issuedById           String?       @db.Uuid
+  redeemedBySessionId  String?       @db.Uuid
+  expiresAt            DateTime?     @db.Timestamptz(3)
+  redeemedAt           DateTime?     @db.Timestamptz(3)
+  voidedAt             DateTime?     @db.Timestamptz(3)
+  voidReason           String?
+  customer             Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  issuedBy             StaffUser?    @relation("VoucherIssuer", fields: [issuedById], references: [id], onDelete: SetNull)
+  redeemedBySession    RentalSession? @relation("VoucherRedemption", fields: [redeemedBySessionId], references: [id], onDelete: Restrict)
+  createdAt            DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime      @updatedAt @db.Timestamptz(3)
+  @@index([status, expiresAt])
+  @@index([customerId, createdAt])
+  @@index([redeemedBySessionId])
+}
