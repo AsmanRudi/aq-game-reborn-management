@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { BillingMode, ConsoleType, Prisma, PrismaClient, StationDeviceType } from '@prisma/client';
 import { z } from 'zod';
 import {
