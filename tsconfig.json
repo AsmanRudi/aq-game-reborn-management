@@ -1,0 +1,16 @@
+﻿{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true,
+    "strictNullChecks": true,
+    "noEmit": true
+  },
+  "include": [
+    "apps/api/src/**/*.ts",
+    "api/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "apps/web"
+  ]
+}
