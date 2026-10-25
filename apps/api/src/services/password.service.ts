@@ -21,8 +21,8 @@ async function derive(password: string, salt: Buffer): Promise<Buffer> {
 }
 
 export async function hashPassword(password: string): Promise<string> {
-  if (password.length < 12 || password.length > 256) {
-    throw new Error('Kata sandi harus memiliki 12 hingga 256 karakter.');
+  if (password.length < 8 || password.length > 256) {
+    throw new Error('Kata sandi harus memiliki 8 hingga 256 karakter.');
   }
   const salt = randomBytes(16);
   const hash = await derive(password, salt);
