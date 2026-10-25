@@ -1,1 +1,0 @@
-UPDATE "StaffUser" SET "passwordHash" = 'scrypt$32768$8$1$95hcJadGc5VCr73kZWTx4Q$hZZbvvsJ9ohc5pno7Yhqem8cix9RP_AODkXWLkw-OM2F-tBDwGQXkRqD2h5p5U-j8LuWFN67DFbwMHoxXJft8g' WHERE email IN ('admin@test.invalid', 'cashier@test.invalid');
