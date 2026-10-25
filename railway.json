@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schema.railway.com/railway-treasure-schema.json",
+  "build": {
+    "builder": "nixpacks",
+    "buildCommand": "npm run build"
+  },
+  "deploy": {
+    "startCommand": "cd apps/api && npm run start",
+    "healthCheckPath": "/api/v1/health",
+    "healthCheckTimeout": 30,
+    "envVars": [
+      {
+        "key": "NODE_ENV",
+        "value": "production"
+      },
+      {
+        "key": "DATABASE_URL",
+        "value": "postgresql://aq_game:change-me@localhost:5432/aq_game_reborn?schema=public"
+      },
+      {
+        "key": "SESSION_SECRET",
+        "value": "aq_game_reborn_super_secret_session_key_2026_at_least_32_chars"
+      }
+    ]
+  }
+}

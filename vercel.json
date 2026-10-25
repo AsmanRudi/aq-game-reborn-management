@@ -3,5 +3,8 @@
   "buildCommand": "npm run build",
   "outputDirectory": "apps/web/dist",
   "installCommand": "npm install",
-  "framework": "vite"
+  "framework": "vite",
+  "env": {
+    "VITE_API_URL": "@AQGAME_API_URL"
+  }
 }
