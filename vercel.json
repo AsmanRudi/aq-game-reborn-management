@@ -1,9 +1,8 @@
-
 {
   "version": 2,
-  "buildCommand": "npm install && npx prisma generate && npm run build --workspace=@aq-game/api && npm run build --workspace=@aq-game/web",
+  "buildCommand": "npx prisma generate && npm run build --workspace=@aq-game/api && npm run build --workspace=@aq-game/web",
   "outputDirectory": "apps/web/dist",
-  "installCommand": "npm install",
+  "installCommand": "npm install --include=dev",
   "framework": "vite",
   "functions": {
     "api/index.ts": {
