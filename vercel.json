@@ -1,26 +1,19 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "apps/api/src/server.ts",
-      "use": "@vercel/node",
-      "config": {
-        "include": ["node_modules/.prisma/client", "node_modules/@prisma/engines"]
-      }
-    },
-    {
-      "src": "apps/web/dist/index.html",
-      "use": "@vercel/static-build"
+  "buildCommand": "npm run build",
+  "outputDirectory": "apps/web/dist",
+  "installCommand": "npm install",
+  "framework": "vite",
+  "functions": {
+    "apps/api/dist": {
+      "memory": 1024,
+      "maxDuration": 30
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/api/v1/(.*)",
-      "dest": "apps/api/src/server.ts"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "apps/web/dist/index.html"
+      "source": "/api/v1/(.*)",
+      "destination": "/api/index.js"
     }
   ]
 }
